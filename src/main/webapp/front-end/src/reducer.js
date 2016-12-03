@@ -1,22 +1,5 @@
 import {Map, List} from 'immutable';
 
-
-const beijingActivities = List.of(
-    {"name": "forbidden city", "id": 1, "overallScore": 8.9},
-    {"name": "great wall", "id": 2, "overallScore": 7.3}
-);
-
-
-const cities = List.of({"name": "Beijing", "id": 1, "photo": "https://media-cdn.tripadvisor.com/media/photo-s/03/9b/2d/b2/beijing.jpg"},
-                {"name": "New York", "id": 2, "photo": "https://media-cdn.tripadvisor.com/media/photo-s/03/9b/2d/f2/new-york-city.jpg"});
-
-
-const INITIAL_STATE = {
-  cities: cities,
-  city: null,
-  activityList: {activities:[], error: null, loading: false}
-};
-
 function setState(state, newState) {
     return state.merge(newState);
 }

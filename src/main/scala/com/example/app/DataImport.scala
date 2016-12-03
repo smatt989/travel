@@ -15,8 +15,6 @@ object DataImport {
       case None => insertCity(cityName, countryName, db)
     }
 
-    city.foreach(c => println("NAME: "+c.name+" ID: "+c.id))
-
     city.foreach(c => deleteActivitiesBy(c, db))
 
     val activities = getActivityDataFromTxt(txtName(cityName, countryName))
@@ -61,7 +59,7 @@ object DataImport {
         val longitude = optionParseString(cols(5))(a => a.toDouble)
         val latitude = optionParseString(cols(6))(a => a.toDouble)
         val duration = optionParseString(cols(4))(a => a.toInt)
-        val funRating = optionParseString(cols(13))(a => a.toDouble)
+        val funRating = optionParseString(cols(7))(a => a.toDouble)
         if(Seq(longitude, latitude, duration, funRating) forall(_.isDefined))
           acts = acts :+ Activity(name, description, Location(longitude.get, latitude.get), new Duration(duration.get * 60 * 1000), funRating.get, Nil, 0)
 
