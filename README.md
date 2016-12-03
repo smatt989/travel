@@ -1,9 +1,9 @@
-# Test-App #
+# Travel-App #
 
 ## Build & Run ##
 
 ```sh
-$ cd Test-App
+$ cd travel
 $ ./sbt
 > jetty:start
 > browse
