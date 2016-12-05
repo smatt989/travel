@@ -1,10 +1,12 @@
 package com.example.app
 
-import com.example.app.models.{Activity, City, Location}
+import com.example.app.models._
 import org.joda.time.Duration
+
 import scala.concurrent.Future
 import Tables._
 import slick.driver.H2Driver.api._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DataImport {
@@ -12,20 +14,20 @@ object DataImport {
   def insertCityData(cityName: String, countryName: String, db: Database) = {
     val city = db.run(getCity(cityName, countryName)).map(_.map(c => City.reify(c))).flatMap{
       case Some(k) => Future.apply(k)
-      case None => insertCity(cityName, countryName, db)
+      case None => City.save(City(cityName, countryName, 0))
     }
 
     city.foreach(c => deleteActivitiesBy(c, db))
 
     val activities = getActivityDataFromTxt(txtName(cityName, countryName))
 
-    val insertedActivities = insertActivities(activities, db)
+    val insertedActivities = Activity.saveMany(activities)
 
     val cityActivityConnections = for {
       c <- city
       ia <- insertedActivities
-    } yield ia.map(i => (c, i))
-    cityActivityConnections.foreach(ca => insertCityActivityConnections(ca, db))
+    } yield ia.map(i => CityActivity(c.id, i.id, 0))
+    cityActivityConnections.foreach(CityActivity.createMany)
   }
 
 
@@ -39,10 +41,6 @@ object DataImport {
 
   def txtName(cityName: String, countryName: String) =
     dataPath+countryName+"_"+cityName+"_updated.txt"
-
-  def insertCityActivityConnections(connections: Seq[(City, Activity)], db: Database) = {
-    db.run(Tables.cityActivities ++= connections.map(c => (0, c._1.id, c._2.id)))
-  }
 
   def getActivityDataFromTxt(txtLocation: String) = {
 
@@ -60,8 +58,10 @@ object DataImport {
         val latitude = optionParseString(cols(6))(a => a.toDouble)
         val duration = optionParseString(cols(4))(a => a.toInt)
         val funRating = optionParseString(cols(7))(a => a.toDouble)
-        if(Seq(longitude, latitude, duration, funRating) forall(_.isDefined))
-          acts = acts :+ Activity(name, description, Location(longitude.get, latitude.get), new Duration(duration.get * 60 * 1000), funRating.get, Nil, 0)
+        val hours = optionParseString(cols(14))(a => a.replaceAll("\\[|\\]|\\'", ""))
+        val activityType = cols(17).trim
+        if(Seq(longitude, latitude, funRating) forall(_.isDefined))
+          acts = acts :+ Activity(name, description, Location(longitude.get, latitude.get), duration.map(d => new Duration(d * 60 * 1000)), funRating.get, hours, ActivityType.fromString(activityType), 0)
 
       }
     }
@@ -71,30 +71,13 @@ object DataImport {
 
   def deleteActivitiesBy(city: City, db: Database) = {
     db.run(Tables.cityActivities.filter(_.cityId === city.id).result).map(cacs => {
-      db.run(Tables.cityActivities.filter(_.id inSet cacs.map(x => x._1)).delete)
-      db.run(Tables.activities.filter(_.id inSet cacs.map(x => x._3)).delete)
+      CityActivity.deleteMany(cacs.map(x => x._1))
+      Activity.deleteMany(cacs.map(_._3))
     })
-  }
-
-  def insertActivities(activities: Seq[Activity], db: Database) = {
-
-    val insertable = activities.map(a => (a.id, a.name, a.description, a.location.longitude, a.location.latitude, a.duration.getStandardMinutes.toInt, a.funRating, ""))
-    val inserted = db.run((Tables.activities returning Tables.activities.map(_.id)) ++= insertable)
-    inserted.onSuccess{ case a => println("INSERTED THIS MANY: "+a.size)}
-    inserted.onFailure{case _ => println("NOPE")}
-    inserted.map(_.zipWithIndex.map({case (id, index) => activities(index).copy(id = id)}))
-  }
-
-  def insertCity(cityName: String, countryName: String, db: Database) = {
-    db.run((Tables.cities returning Tables.cities.map(_.id)) += (0, cityName, countryName))
-      .map(id => City(cityName, id))
   }
 
   def getCity(cityName: String, countryName: String) = {
     cities.filter(c => c.name === cityName && c.country === countryName).result.headOption
   }
-
-
-
 
 }
