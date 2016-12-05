@@ -45,7 +45,7 @@ trait SlickDbObject[ScalaClass <: HasIntId[ScalaClass], TupleSignature, SlickTab
     ids.zipWithIndex.map{ case (id, index) => as(index).updateId(id)}
 
   def deleteQuery(ids: Seq[Int]) =
-    Tables.activities.filter(_.id inSet ids).delete
+    table.filter(_.id inSet ids).delete
 
   def byIdsQuery(ids: Seq[Int]) =
     table.filter(_.id inSet ids).result
