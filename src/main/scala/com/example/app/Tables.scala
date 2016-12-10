@@ -15,9 +15,10 @@ object Tables {
     def * = (id, name, country)
   }
 
-  class Activities(tag: Tag) extends Table[(Int, String, Option[String], Double, Double, Option[Int], Double, Option[String], String)](tag, "ACTIVITIES") with HasIdColumn[Int] {
+  class Activities(tag: Tag) extends Table[(Int, String, Option[String], Option[String], Double, Double, Option[Int], Double, Option[String], String, Option[String], Option[String], Option[String], Option[String], Option[String], Option[String])](tag, "ACTIVITIES") with HasIdColumn[Int] {
     def id = column[Int]("ACTIVITY_ID", O.PrimaryKey, O.AutoInc)
     def name = column[String]("NAME")
+    def summary = column[Option[String]]("SUMMARY")
     def description = column[Option[String]]("DESCRIPTION")
     def longitude = column[Double]("LONGITUDE")
     def latitude = column[Double]("LATITUDE")
@@ -25,8 +26,14 @@ object Tables {
     def funRating = column[Double]("FUN_RATING")
     def weekOpeningHours = column[Option[String]]("OPENING_HOURS")
     def activityType = column[String]("ACTIVITY_TYPE")
+    def openingHoursText = column[Option[String]]("OPENING_HOURS_TEXT")
+    def photoUrl = column[Option[String]]("PHOTO_URL")
+    def linkUrl = column[Option[String]]("LINK_URL")
+    def priceText =  column[Option[String]]("PRICE_TEXT")
+    def subTypes = column[Option[String]]("SUB_TYPES")
+    def addressText = column[Option[String]]("ADDRESS_TEXT")
 
-    def * = (id, name, description, longitude, latitude, duration, funRating, weekOpeningHours, activityType)
+    def * = (id, name, summary, description, longitude, latitude, duration, funRating, weekOpeningHours, activityType, openingHoursText, photoUrl, linkUrl, priceText, subTypes, addressText)
   }
 
   class CityActivities(tag: Tag) extends Table[(Int, Int, Int)](tag, "CITY_ACTIVITIES") with HasIdColumn[Int] {
@@ -98,7 +105,7 @@ object Tables {
   val schemas = (cities.schema ++ itineraries.schema ++ activities.schema ++ cityActivities.schema ++ scheduledActivities.schema ++ desiredActivities.schema ++ rejectedActivities.schema)
 
   def populateData(db: Database) = {
-    val cities = Seq(("beijing", "china"), ("new-york-city", "usa"), ("chicago", "usa"), ("san-francisco", "usa"))
+    val cities = Seq(("beijing", "china"), ("new-york-city", "usa"), ("chicago", "usa"), ("san-francisco", "usa"), ("los-angeles", "usa"), ("london", "england"))
 
     for(c <- cities) {
       DataImport.insertCityData(c._1, c._2, db)

@@ -19,9 +19,7 @@ trait CityRoutes extends SlickRoutes{
 
     val cityId = {params("id")}.toInt
 
-    City.availableActivitiesByCityId(cityId).map(as => {
-      as.map(_.toJson)
-    })
+    City.availableActivitiesByCityId(cityId)
   }
 
   post("/cities/search") {

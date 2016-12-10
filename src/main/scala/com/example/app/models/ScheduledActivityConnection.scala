@@ -20,12 +20,12 @@ case class ScheduledActivity(itineraryId: Int, activityId: Int, startDateTime: D
         Future.apply(optionalActivity.get)
       else
         activity
-    a.map(act => JsonScheduledActivity(act.toJson, startDateTime.getMillis, endDateTime.getMillis, lockedTime))
+    a.map(act => JsonScheduledActivity(act, startDateTime.getMillis, endDateTime.getMillis, lockedTime))
   }
 
 }
 
-case class JsonScheduledActivity(activity: JsonActivity, startDateTime: Long, endDateTime: Long, lockedTime: Boolean = false)
+case class JsonScheduledActivity(activity: Activity, startDateTime: Long, endDateTime: Long, lockedTime: Boolean = false)
 case class InputScheduledActivity(activityId: Int, startDateTime: Long, endDateTime: Long, lockedTime: Boolean = false){
   def toScheduledActivity(itineraryId: Int) = ScheduledActivity(itineraryId, activityId, new DateTime(startDateTime), new DateTime(endDateTime), lockedTime)
 }

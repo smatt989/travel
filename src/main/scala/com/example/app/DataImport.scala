@@ -40,7 +40,9 @@ object DataImport {
   val dataPath = "src/main/resources/data/"
 
   def txtName(cityName: String, countryName: String) =
-    dataPath+countryName+"_"+cityName+"_updated.txt"
+    dataPath+countryName+"_"+cityName+"_download.txt"
+
+  val TRUE = "true"
 
   def getActivityDataFromTxt(txtLocation: String) = {
 
@@ -51,17 +53,55 @@ object DataImport {
       val cols = line.split("\t").map(_.trim).toSeq
 
       if(cols.size >= 13) {
+        val name = cols(0) //YES
+        val eventType = cols(3).trim //YES
+        val summary = optionParseString(cols(4))(a => a) //YES
+        val description = optionParseString(cols(5))(a => a) //NEW
+        val openHoursString = optionParseString(cols(6))(a => a) //NEW
+        val openHoursTimes = optionParseString(cols(7))(a => a.replaceAll("\\[|\\]|\\'", "")) //NO
+        val photo = optionParseString(cols(8))(a => a) //NEW
+        val link = optionParseString(cols(9))(a => a) //NEW
+        val lonelyPlanetTopPick = optionParseString(cols(10))(a => a.toLowerCase == TRUE) //NO
+        val tripAdvisorTopChoice = optionParseString(cols(11))(a => a.toLowerCase == TRUE) //NO
+        val calcedDuration = optionParseString(cols(12))(a => a.toInt) //YES
+        val priceString = optionParseString(cols(13))(a => a) //NEW
+        val lonelyPlanetSubTypes = (optionParseString(cols(14))(a => a.replaceAll("\\[|\\]|\\'", "").split(",").toSeq)).getOrElse(Nil) //NO
+        val tripAdvisorSubTypes = (optionParseString(cols(15))(a => a.replaceAll("\\[|\\]|\\'", "").split(",").toSeq)).getOrElse(Nil) //NEW
+        val latitude = optionParseString(cols(16))(a => a.toDouble) //YES
+        val longitude = optionParseString(cols(17))(a => a.toDouble) //YES
+        val overallScore = optionParseString(cols(18))(a => a.toDouble) //YES
+        val tripAdvisorScore = optionParseString(cols(19))(a => a.toDouble) //NO
+        val tripAdvisorRatings = (optionParseString(cols(20))(a => {
+          val stringArray = a.replaceAll("\\[|\\]|\\'", "").split(",").toSeq
+          if(stringArray.size == 5)
+            stringArray.map(_.trim.toInt)
+          else
+            Nil
+        })).getOrElse(Nil) //NO
+        val lonelyPlanetStreetAddress = optionParseString(cols(21))(a => a) //CALC
+        val tripAdvisorStreetAddress = optionParseString(cols(22))(a => a)  //CALC
+        val tripAdvisorCertificateOfExcellence = optionParseString(cols(23))(a => a.toLowerCase == TRUE) //NO
+        val tripAdvisorRank = optionParseString(cols(24))(a => a.toInt) //NO
+        val tripAdvisorDuration = optionParseString(cols(25))(a => a.toInt) //NO
+        val calcedOpenHoursTimes = optionParseString(cols(26))(a => a.replaceAll("\\[|\\]|\\'", "")) //YES
 
-        val name = cols(2)
+/*        val name = cols(0)
         val description = optionParseString(cols(3))(a => a)
         val longitude = optionParseString(cols(5))(a => a.toDouble)
         val latitude = optionParseString(cols(6))(a => a.toDouble)
         val duration = optionParseString(cols(4))(a => a.toInt)
         val funRating = optionParseString(cols(7))(a => a.toDouble)
         val hours = optionParseString(cols(14))(a => a.replaceAll("\\[|\\]|\\'", ""))
-        val activityType = cols(17).trim
-        if(Seq(longitude, latitude, funRating) forall(_.isDefined))
-          acts = acts :+ Activity(name, description, Location(longitude.get, latitude.get), duration.map(d => new Duration(d * 60 * 1000)), funRating.get, hours, ActivityType.fromString(activityType), 0)
+        val activityType = cols(17).trim*/
+        val address = if(tripAdvisorStreetAddress.isDefined)
+          tripAdvisorStreetAddress
+        else
+          lonelyPlanetStreetAddress
+
+        if(Seq(longitude, latitude, overallScore) forall(_.isDefined))
+          acts = acts :+ Activity(name, summary, description, Location(longitude.get, latitude.get),
+            calcedDuration.map(d => new Duration(d * 60 * 1000)), overallScore.get, calcedOpenHoursTimes,
+            ActivityType.fromString(eventType), openHoursString, photo, link, priceString, tripAdvisorSubTypes, address, 0)
 
       }
     }

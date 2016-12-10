@@ -7,12 +7,19 @@ import slick.driver.H2Driver.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Activity(name: String,
+                    summary: Option[String],
                     description: Option[String],
                     location: Location,
                     duration: Option[Duration],
                     funRating: Double,
                     openingHours: Option[String],
                     activityType: ActivityType,
+                    openingHoursText: Option[String],
+                    photoUrl: Option[String],
+                    linkUrl: Option[String],
+                    priceText: Option[String],
+                    subTypes: Seq[String],
+                    addressText: Option[String],
                     id: Int) extends HasIntId[Activity]{
 
   lazy val weekOpeningHours: Option[Seq[DayOpeningHours]] = openingHours.map(_.split(",").toSeq.map(s => {
@@ -32,8 +39,6 @@ case class Activity(name: String,
 
   def canStart(at: DateTime): Option[Boolean] =
     duration.flatMap(d => isOpen(new Interval(at, at.plus(d))))
-
-  def toJson = JsonActivity(name, description, location, duration.map(_.getStandardMinutes.toInt), funRating, openingHours, activityType.name, id)
 }
 
 case class ActivityType(name: String)
@@ -51,16 +56,7 @@ object ActivityType {
     }
 }
 
-case class JsonActivity(name: String,
-                        description: Option[String],
-                        location: Location,
-                        duration: Option[Int],
-                        funRating: Double,
-                        openingHours: Option[String],
-                        activityType: String,
-                        id: Int)
-
-object Activity extends Updatable[Activity, (Int, String, Option[String], Double, Double, Option[Int], Double, Option[String], String), Tables.Activities]{
+object Activity extends Updatable[Activity, (Int, String, Option[String], Option[String], Double, Double, Option[Int], Double, Option[String], String, Option[String], Option[String], Option[String], Option[String], Option[String], Option[String]), Tables.Activities]{
 
   val seconds = 1000
   val minutes = 60 * seconds
@@ -69,15 +65,32 @@ object Activity extends Updatable[Activity, (Int, String, Option[String], Double
   lazy val table = Tables.activities
 
   def classToTuple(a: Activity) =
-    (a.id, a.name, a.description, a.location.longitude, a.location.latitude, a.duration.map(_.getStandardMinutes.toInt), a.funRating, a.openingHours, a.activityType.name)
+    (a.id, a.name, a.summary, a.description, a.location.longitude, a.location.latitude,
+      a.duration.map(_.getStandardMinutes.toInt), a.funRating, a.openingHours, a.activityType.name,
+      a.openingHoursText, a.photoUrl, a.linkUrl, a.priceText, Some(a.subTypes.mkString(",")), a.addressText)
 
   def updateQuery(a: Activity) =
     table.filter(_.id === a.id)
       .map(x => (x.name, x.description, x.longitude, x.latitude, x.duration, x.funRating, x.weekOpeningHours, x.activityType))
       .update((a.name, a.description, a.location.longitude, a.location.latitude, a.duration.map(_.getStandardMinutes.toInt), a.funRating, a.openingHours, a.activityType.name))
 
-  def reify(tuple: (Int, String, Option[String], Double, Double, Option[Int], Double, Option[String], String)) =
-    Activity(tuple._2, tuple._3, Location(tuple._4, tuple._5), tuple._6.map(a => new Duration(a * 60 * 1000)), tuple._7, tuple._8, ActivityType.fromString(tuple._9), tuple._1)
+  def reify(tuple: (Int, String, Option[String], Option[String], Double, Double, Option[Int], Double, Option[String], String, Option[String], Option[String], Option[String], Option[String], Option[String], Option[String])) =
+    Activity(tuple._2,
+      tuple._3,
+      tuple._4,
+      Location(tuple._5, tuple._6  ),
+      tuple._7.map(a => new Duration(a * 60 * 1000)),
+      tuple._8,
+      tuple._9,
+      ActivityType.fromString(tuple._10),
+      tuple._11,
+      tuple._12,
+      tuple._13,
+      tuple._14,
+      tuple._15.map(_.split(",").toSeq).getOrElse(Nil),
+      tuple._16,
+      tuple._1)
+    //Activity(tuple._2, tuple._3, Location(tuple._4, tuple._5), tuple._6.map(a => new Duration(a * 60 * 1000)), tuple._7, tuple._8, ActivityType.fromString(tuple._9), tuple._1)
 
   def isOpen(activity: Activity, during: Interval): Option[Boolean] = {
     if(activity.weekOpeningHours.isDefined) {

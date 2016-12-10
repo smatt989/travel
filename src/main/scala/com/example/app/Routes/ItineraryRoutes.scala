@@ -57,7 +57,7 @@ trait ItineraryRoutes extends SlickRoutes{
     val desiredActivities = DesiredActivity.byItineraryId(itineraryId)
     val activities = desiredActivities.flatMap(da => Activity.byIds(da.map(_.activityId)))
 
-    activities.map(_.map(_.toJson))
+    activities
   }
 
   post("/itineraries/:id/activities/desired/save") {
@@ -72,7 +72,7 @@ trait ItineraryRoutes extends SlickRoutes{
       desiredAs.flatMap(da => Activity.byIds(da.map(_.activityId)))
     })
 
-    activities.map(_.map(_.toJson))
+    activities
   }
 
   get("/itineraries/:id/activities/rejected") {
@@ -82,7 +82,7 @@ trait ItineraryRoutes extends SlickRoutes{
     val rejectedActivities = RejectedActivity.byItineraryId(itineraryId)
     val activities = rejectedActivities.flatMap(ra => Activity.byIds(ra.map(_.activityId)))
 
-    activities.map(_.map(_.toJson))
+    activities
   }
 
   post("/itineraries/:id/activities/rejected/save") {
@@ -97,7 +97,7 @@ trait ItineraryRoutes extends SlickRoutes{
       rejectedAs.flatMap(ra => Activity.byIds(ra.map(_.activityId)))
     })
 
-    activities.map(_.map(_.toJson))
+    activities
   }
 
 }
