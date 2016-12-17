@@ -36,7 +36,8 @@ object TestappBuild extends Build {
         "com.typesafe.slick" %% "slick" % "3.1.1",
         "org.slf4j" % "slf4j-nop" % "1.6.4",
         "com.h2database" % "h2" % "1.4.181",
-        "com.mchange" % "c3p0" % "0.9.5.1"
+        "com.mchange" % "c3p0" % "0.9.5.1",
+        "com.github.wslotkin" % "itinerator-generator" % "0.1.1"
 
       ),
       scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>

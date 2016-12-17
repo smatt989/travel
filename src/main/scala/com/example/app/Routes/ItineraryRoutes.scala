@@ -100,4 +100,22 @@ trait ItineraryRoutes extends SlickRoutes{
     activities
   }
 
+  post("/itineraries/:id/collaborate") {
+    contentType = formats("json")
+
+    val itineraryId = {params("id")}.toInt
+    val itinerary = Itinerary.byId(itineraryId)
+
+    val results = {
+          itinerary.map(i => {
+            new ItineraryGeneration(i).createItinerary()
+          })
+    }
+
+    results.flatMap(rs => {
+      ScheduledActivity.jsonFromMany(rs.filter(_.activityId != 0))
+    })
+
+  }
+
 }

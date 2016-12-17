@@ -2,6 +2,7 @@ package com.example.app.models
 
 import com.example.app.{HasIntId, Tables, Updatable}
 import org.joda.time.{DateTime, Duration, Interval}
+import org.slf4j.LoggerFactory
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,14 +23,26 @@ case class Activity(name: String,
                     addressText: Option[String],
                     id: Int) extends HasIntId[Activity]{
 
-  lazy val weekOpeningHours: Option[Seq[DayOpeningHours]] = openingHours.map(_.split(",").toSeq.map(s => {
-    val Seq(startHours, startMinutes, endHours, endMinutes) =
-      s.trim.split("-").toSeq.map(_.trim).flatMap(_.split(":").toSeq.map(_.toInt))
+  lazy val weekOpeningHoursRanges = {
+    openingHours match {
+      case Some(st) if st.trim != "" => Some(
+        st.split(",").toSeq.map(s => {
+          val Seq(startHours, startMinutes, endHours, endMinutes) = {
+            s.trim.split("-").toSeq.map(_.trim).flatMap(_.split(":").toSeq.map(_.toInt))
+          }
+          HourRange(startHours, startMinutes, endHours, endMinutes)
+        }))
+      case _ => None
+    }
+
+  }
+
+  lazy val weekOpeningHours: Option[Seq[DayOpeningHours]] = weekOpeningHoursRanges.map(_.map(wo =>
     DayOpeningHours(
-      new DateTime(0).plusHours(startHours).plusMinutes(startMinutes),
-      new DateTime(0).plusHours(endHours).plusMinutes(endMinutes)
+      new DateTime(0).plusHours(wo.startHours).plusMinutes(wo.startMinutes),
+      new DateTime(0).plusHours(wo.endHours).plusMinutes(wo.endMinutes)
     )
-  }))
+  ))
 
   def updateId(id: Int) = this.copy(id = id)
 
@@ -40,6 +53,8 @@ case class Activity(name: String,
   def canStart(at: DateTime): Option[Boolean] =
     duration.flatMap(d => isOpen(new Interval(at, at.plus(d))))
 }
+
+case class HourRange(startHours: Int, startMinutes: Int, endHours: Int, endMinutes: Int)
 
 case class ActivityType(name: String)
 

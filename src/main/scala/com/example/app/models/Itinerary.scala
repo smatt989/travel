@@ -11,10 +11,12 @@ import com.example.app.Tables.Itineraries
 import slick.lifted.TableQuery
 import slick.driver.H2Driver.api._
 
+import scala.concurrent.Future
+
 case class Itinerary(cityId: Int, startDateTime: DateTime, endDateTime: DateTime, id: Int) extends HasIntId[Itinerary]{
   def scheduledActivities: Seq[ScheduledActivity] = ???
   def desiredActivities: Set[Activity] = ???
-  def rejectedActivities: Set[Activity] = ???
+  def rejectedActivities: Future[Set[Activity]] = ???
   lazy val city = City.byId(cityId)
   lazy val interval = new Interval(startDateTime, endDateTime)
 
